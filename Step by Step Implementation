@@ -1,0 +1,84 @@
+1.First of all, go to AWS portal, and create a new instance. As,
+·       Name: jenkins-server
+·       AMI: ubuntu.
+·       Instance type: t2.micro (free tier).
+·       Key pair login: Create > docker.pem.
+·       Allow HTTP
+·       Allow HTTPS
+(Download the .pem file.) and then Click on Launch Instance.
+
+2.Now, connect to the EC2 instance that you have created. Copy the SSH from server
+
+3.Go to the download folder, where the .pem file is placed and open the terminal in the same location, and paste the SSH.
+
+4.In the machine, run the command “ssh-keygen”
+This will generate public and private keys in the machine.
+Id_rsa – Private Key.
+Id_rsa.pub – Public Key.
+
+5.Now we will install Jenkins on the machine
+
+6.Install Docker --> “Sudo apt-install docker.io”
+
+To check if it is installed or not--> “jenkins --version” and “docker --version”
+
+7.We will allow ports 8080 and 8001 for this machine from a security group from AWS EC2 Instance. 
+
+8.Now, Copy the Public Ip of the machine and paste it to the browser to access the Jenkins portal. As for example,
+“54.193.49.139:8080”
+
+9.We need an Administrator Password to unlock this.
+“cat /var/lib/Jenkins/secrets/initialAdminPassword”
+
+10.Now Click on, “Install Suggested Plugins”
+
+11.Login into Jenkins
+
+12.Now, we will create a CI/CD pipeline, which will fetch the code from GitHub. 
+
+13.Add name as
+Name: todo-app
+Project: Freestyle project
+Click “Ok”.
+.  In Source Code Management, select Git and Add Repository URL and Credentials.
+
+14.In Build Step, select Execute Shell and write following command to build docker image and from Docker image we will create a container.
+Commands-
+
+docker build -t todo-django-app
+docker run -p 8001:8001 -d todo-django-app
+
+15.After getting success, In the browser, search for
+<public_ip_of_ec2:8001>
+
+16.Now, our goal is,
+·       Whenever the developer commits their code in GitHub, after every commit, it should reflect in the live web app.
+·       For that, we will use “GitScm polling”.
+·       Every time, a developer made a commit, a trigger will run automatically, which will rebuild the image and run a container on your behalf as a part of automation that will run the pipeline automatically.
+
+17.Now, configure the project again, and add
+Build Trigger: GitHub hook trigger for GitScm polling.
+Description: GitHub webhook integration
+
+18.We need to install the “Git Integration” plugin from Manage Jenkins, by following the path,
+(Manage Jenkins > Manage Plugins > Git Integration).
+
+19.Now, Goto GitHub > Settings > SSH and GPG Keys > New SSH Key.
+Add details as
+Title: guptaritajya@gmail.com
+Key type: <public_key>
+
+20.  Now, we need to go to GitHub and create a new SSH and GPG Key.
+GitHub > Repo “react-django-demo-app” > Settings > Webhooks.
+
+21.  Add the following details,
+Payload URL: http://<public_ip_of_ec2>:8080/github-webhook/
+Content Type: application/json
+Which event would you like to trigger this webhook?
+o  Just the push event.
+Active: True
+Click on “Add Webhook”.
+
+22.  Now, Save the configured project.
+
+23.  Do some changes in the code and push to GitHub, this will automatically run a pipeline, and the new code will be Live.
